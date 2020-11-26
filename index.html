@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+  <meta charset="UTF-8">
+  <title>Face Filters with JS</title>
+</head>
+
+<body translate="no" >
+  <!DOCTYPE html>
+<html>
+	<head>
+		<title>Face Filter</title>
+	</head>
+
+	<body>
+		<script src="p5.min.js"></script>
+		<script src="clmtrackr.min.js"></script>
+	</body>
+</html>
+    <!-- <script src="stopExecutionOnTimeout.js"></script> -->
+    <script id="rendered-js" >
+let outputWidth;
+let outputHeight;
+
+let faceTracker; // Face Tracking
+let videoInput;
+
+let imgSpidermanMask; // Spiderman Mask Filter
+let imgDogEarRight, imgDogEarLeft, imgDogNose; // Dog Face Filter
+
+let imgGlass_1, imgGlass_2, imgGlass_3, imgGlass_4, imgGlass_5; // Glass Mask Filter
+
+let selected = 2; // Default no filter
+
+/*
+ * **p5.js** library automatically executes the `preload()` function. Basically, it is used to load external files. In our case, we'll use it to load the images for our filters and assign them to separate variables for later use.
+*/
+function preload()
+{
+  // Spiderman Mask Filter asset
+  imgSpidermanMask = loadImage("spiderman-mask-1.png");
+
+  // Dog Face Filter assets
+  imgDogEarRight = loadImage("dog-ear-right.png");
+  imgDogEarLeft = loadImage("dog-ear-left.png");
+  imgDogNose = loadImage("dog-nose.png");
+  
+  // Glass Mask Filter asset
+  imgGlass_1 = loadImage("1.png");
+  imgGlass_2 = loadImage("2.png");
+  imgGlass_3 = loadImage("3.png");
+  imgGlass_4 = loadImage("4.png");
+  imgGlass_5 = loadImage("5.png");
+}
+
+/**
+   * In p5.js, `setup()` function is executed at the beginning of our program, but after the `preload()` function.
+  */
+function setup()
+{
+  const maxWidth = Math.min(windowWidth, windowHeight);
+  pixelDensity(1);
+  outputWidth = maxWidth;
+  outputHeight = maxWidth * 0.75; // 4:3
+
+  createCanvas(outputWidth, outputHeight);
+
+  // webcam capture
+  videoInput = createCapture(VIDEO);
+  videoInput.size(outputWidth, outputHeight);
+  videoInput.hide();
+
+  // select filter
+  const sel = createSelect();
+  const selectList = ['Spiderman Mask', 'Dog Filter', 'Glass_1', 'Glass_2', 'Glass_3', 'Glass_4', 'Glass_5']; // list of filters
+  sel.option('Select Filter', -1); // Default no filter
+  for (let i = 0; i < selectList.length; i++)
+  {
+    sel.option(selectList[i], i);
+  }
+  sel.changed(applyFilter);
+
+  // tracker
+  faceTracker = new clm.tracker();
+  faceTracker.init();
+  faceTracker.start(videoInput.elt);
+}
+
+// callback function
+function applyFilter()
+{
+  selected = this.selected(); // change filter type
+}
+
+/*
+   * In p5.js, draw() function is executed after setup(). This function runs inside a loop until the program is stopped.
+  */
+function draw()
+{
+  image(videoInput, 0, 0, outputWidth, outputHeight); // render video from webcam
+
+  // apply filter based on choice
+  switch (selected) {
+
+    case '-1':break;
+    case '0':drawSpidermanMask();break;
+    case '1':drawDogFace();break;
+    case '2':drawGlass_1();break;
+    case '3':drawGlass_2();break;
+    case '4':drawGlass_3();break;
+    case '5':drawGlass_4();break;
+    case '6':drawGlass_5();break;}
+
+}
+
+// Spiderman Mask Filter
+function drawSpidermanMask()
+{
+  const positions = faceTracker.getCurrentPosition();
+  if (positions !== false)
+  {
+    push();
+    const wx = Math.abs(positions[13][0] - positions[1][0]) * 1.2; // The width is given by the face width, based on the geometry
+    const wy = Math.abs(positions[7][1] - Math.min(positions[16][1], positions[20][1])) * 1.2; // The height is given by the distance from nose to chin, times 2
+    translate(-wx / 2, -wy / 2);
+    image(imgSpidermanMask, positions[62][0], positions[62][1], wx, wy); // Show the mask at the center of the face
+    pop();
+  }
+}
+
+// Dog Face Filter
+function drawDogFace()
+{
+  const positions = faceTracker.getCurrentPosition();
+  if (positions !== false)
+  {
+    if (positions.length >= 20) {
+      push();
+      translate(-100, -150); // offset adjustment
+      image(imgDogEarRight, positions[20][0], positions[20][1]);
+      pop();
+    }
+
+    if (positions.length >= 16) {
+      push();
+      translate(-20, -150); // offset adjustment
+      image(imgDogEarLeft, positions[16][0], positions[16][1]);
+      pop();
+    }
+
+    if (positions.length >= 62) {
+      push();
+      translate(-57, -20); // offset adjustment
+      image(imgDogNose, positions[62][0], positions[62][1]);
+      pop();
+    }
+  }
+}
+
+function drawGlass_1()
+{
+  const positions = faceTracker.getCurrentPosition();
+  if (positions !== false)
+  {
+    push();
+    const wx = Math.abs(positions[13][0] - positions[1][0]) * 1.2; // The width is given by the face width, based on the geometry
+    const wy = Math.abs(positions[41][1] - Math.min(positions[15][1], positions[19][1])) * 1.2; // The height is given by the distance from nose to chin, times 2
+    translate(-wx / 2, -wy / 2);
+    image(imgGlass_1, positions[33][0], positions[33][1], wx, wy); // Show the mask at the center of the face
+    pop();
+  }
+}
+
+function drawGlass_2()
+{
+  const positions = faceTracker.getCurrentPosition();
+  if (positions !== false)
+  {
+    push();
+    const wx = Math.abs(positions[13][0] - positions[1][0]) * 1.2; // The width is given by the face width, based on the geometry
+    const wy = Math.abs(positions[41][1] - Math.min(positions[15][1], positions[19][1])) * 1.2; // The height is given by the distance from nose to chin, times 2
+    translate(-wx / 2, -wy / 2);
+    image(imgGlass_2, positions[33][0], positions[33][1], wx, wy); // Show the mask at the center of the face
+    pop();
+  }
+}
+
+function drawGlass_3()
+{
+  const positions = faceTracker.getCurrentPosition();
+  if (positions !== false)
+  {
+    push();
+    const wx = Math.abs(positions[13][0] - positions[1][0]) * 1.2; // The width is given by the face width, based on the geometry
+    const wy = Math.abs(positions[41][1] - Math.min(positions[15][1], positions[19][1])) * 1.2; // The height is given by the distance from nose to chin, times 2
+    translate(-wx / 2, -wy / 2);
+    image(imgGlass_3, positions[33][0], positions[33][1], wx, wy); // Show the mask at the center of the face
+    pop();
+  }
+}
+
+function drawGlass_4()
+{
+  const positions = faceTracker.getCurrentPosition();
+  if (positions !== false)
+  {
+    push();
+    const wx = Math.abs(positions[13][0] - positions[1][0]) * 1.2; // The width is given by the face width, based on the geometry
+    const wy = Math.abs(positions[41][1] - Math.min(positions[15][1], positions[19][1])) * 1.2; // The height is given by the distance from nose to chin, times 2
+    translate(-wx / 2, -wy / 2);
+    image(imgGlass_4, positions[33][0], positions[33][1], wx, wy); // Show the mask at the center of the face
+    pop();
+  }
+}
+
+function drawGlass_5()
+{
+  const positions = faceTracker.getCurrentPosition();
+  if (positions !== false)
+  {
+    push();
+    const wx = Math.abs(positions[13][0] - positions[1][0]) * 1.2; // The width is given by the face width, based on the geometry
+    const wy = Math.abs(positions[41][1] - Math.min(positions[15][1], positions[19][1])) * 1.2; // The height is given by the distance from nose to chin, times 2
+    translate(-wx / 2, -wy / 2);
+    image(imgGlass_5, positions[33][0], positions[33][1], wx, wy); // Show the mask at the center of the face
+    pop();
+  }
+}
+
+function windowResized()
+{
+  const maxWidth = Math.min(windowWidth, windowHeight);
+  pixelDensity(1);
+  outputWidth = maxWidth;
+  outputHeight = maxWidth * 0.75; // 4:3
+  resizeCanvas(outputWidth, outputHeight);
+}
+</script>
+</body>
+</html>
